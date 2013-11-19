@@ -1,7 +1,6 @@
 /*
  * init.cpp - Implementation of initialization class
  */
-#include "Aria.h"
 #include "init.h"
 
 int Init::initRobot()
