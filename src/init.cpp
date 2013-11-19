@@ -4,7 +4,7 @@
 #include "Aria.h"
 #include "init.h"
 
-int initRobot()
+int Init::initRobot()
 {
   int ret;
   ArRobot robot;
