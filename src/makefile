@@ -1,22 +1,19 @@
 # makefile
 #  - This is a makefile to build the files needed for the auto-park program.
+CXX = g++
+CFLAGS = -fPIC -g -Wall
+ARIA_INCLUDE =-I/usr/local/Aria/include
+ARIA_LINK =-L/usr/local/Aria/lib -lAria -lpthread -ldl -lrt
 
-# Compiler to use
-CC=g++
+autoPark: autoPark.cpp
 
-# Flags
-CFLAGS=-c -Wall
+%.cpp: %.cpp
+	$(CXX) $(CFLAGS) $(ARIA_INCLUDE) $< -o $@ $(ARIA_LINK)
 
-auto-park: main.o
-	$(CC) main.o -o auto-park
-
-main.o: main.cpp
-	$(CC) $(CFLAGS) -c main.cpp
-
-run: auto-park
-	./auto-park
+run: autoPark
+	./autoPark
 
 clean:
-	rm -rf *o auto-park
+	rm autoPark
 
 # EOF #
