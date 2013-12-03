@@ -1,6 +1,6 @@
 /*
  * autoPark.cpp
- *  -  The main program to run the parking function.
+ * - The main program to run the parking function.
  */
 #include "Aria.h"
 #include <fstream>
@@ -10,9 +10,19 @@
 
 using namespace std;
 
+// Constants
+#define TURNING_RADIUS 1000
+#define ROBOT_RADIUS 227.5
+#define DEPTH_BOUND 1000
+#define MAR_ERR 50
+#define VMAX 500
+#define LASER_ANGLE 90
+#define OMEGA_MAX 2.618
+
 // Global variables for robot and laser
 ArRobot robot;
 ArSick sick;
+
 
 /*
  * initialize
@@ -60,38 +70,66 @@ int initialize(int *argc, char **argv) {
     return 0;
 }
 
+
 /*
  * scanForSpace
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
-  int t, cnt;
-  double laser_dist[900];
-  double laser_angle[900];
-  std::list<ArSensorReading *> *readings;
-  std::list<ArSensorReading *>::iterator it;
-
-  cnt = 0;
-    while(cnt<10000)
-	{
-		readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings();//CurrentBuffer..
-		while (readings==NULL) 	readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings();
+    int t, cnt;
+    double laser_dist;
+    double laser_angle[900];
+    double dist_bound;
+    bool depth_ok;
+    bool length_ok;
+    std::list<ArSensorReading *> *readings;
+    std::list<ArSensorReading *>::iterator it;
+    
+    // Set laser angle
+    readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
+    laser_angle = LASER_ANGLE;
+    depth_ok = FALSE;
+    
+    // TODO: Begin moving forward
+    
+    // Look for long enough space
+    init_dist = readings->getRange();
+    
+    for (it=readings->begin(); it!=readings->(); it++) {
+        laser_dist=(*it)->getRange();
         
-        t=0;
-        for(it=readings->begin();it!=readings->end(); it++)
-        {
-            laser_dist[t]=(*it)->getRange();
-            laser_angle[t]=-90+t;
-            //cout << "laser angle: " << laser_angle[t] << " laser dist.: " << laser_dist[t] <<" "<<"\n";
-            t++;
+        if (laser_dist > (DEPTH_BOUND+MAR_ERR+init_dist)) {
+            depth_ok = TRUE;
+            // TODO: Set a marker at current distance, check if depth
+            // is still ok at current_distance + 1500 (length of spot).
+            
         }
-        cnt++;
-        
-	} //end while 1<2
-    for (t=0; t<181; t++){
-        cout << "laser angle: " << laser_angle[t] << " laser dist.: " << laser_dist[t] <<" "<<"\n";
     }
+    printf("\nFound acceptable parking space\n")
+    return;
 }
+
+
+/*
+ * parkRobot()
+ * - Function to park the robot.
+ */
+void parkRobot() {
+    // TODO: Calculate center of circle one
+    
+    // TODO: Calculate triangle angle
+    
+    // TODO: Calculate x distance to move for alignment
+    
+    // TODO: Back up proper distance
+    
+    // TODO: First circle turn
+    
+    // TODO: Second circle turn
+    
+    return;
+}
+
 
 /*
  * main
@@ -111,13 +149,8 @@ int main(int argc, char **argv) {
     // Scan for parking space
     scanForSpace();
   
-    // Log scan data
-  
     // When parking space is found, execute park function
-
-    // Log parameters
-
-    // Log status
+    parkRobot();
     
     // Shutdown the robot
     robot.waitForRunExit();
