@@ -41,16 +41,15 @@ int initialize(int *argc, char **argv) {
     connector.parseArgs();
 
     // Try to connect, exit on failure
-	if (!connector.connectRobot(&robot))
-	{
-		printf("Could not connect to robot... exiting\n");
-		Aria::shutdown();
-		return 1;
-	}
+    if (!connector.connectRobot(&robot)) {
+        printf("Could not connect to robot... exiting\n");
+	Aria::shutdown();
+	return 1;
+    }
     printf("Robot: Connected\n");
     
     // Start the robot running so that if we lose connection the run stops
-	robot.runAsync(true);
+    robot.runAsync(true);
     
     // Set up the laser
     sick.configureShort(false,ArSick::BAUD38400,ArSick::DEGREES180,ArSick::INCREMENT_ONE);
@@ -58,8 +57,7 @@ int initialize(int *argc, char **argv) {
     sick.runAsync();
     
     // Do a blocking connect, if it fails exit
-    if (!sick.blockingConnect())
-    {
+    if (!sick.blockingConnect()) {
         printf("Could not connect to SICK laser... exiting\n");
         Aria::shutdown();
         return 1;
@@ -89,7 +87,8 @@ void scanForSpace() {
     readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
     laser_angle = LASER_ANGLE;
     depth_ok = FALSE;
-    
+    length_ok = FALSE;
+
     // TODO: Begin moving forward
     
     // Look for long enough space
@@ -138,7 +137,7 @@ void parkRobot() {
 int main(int argc, char **argv) {
     
     // Initialize the Robot
-  if (initialize(&argc, argv) == 0) {
+    if (initialize(&argc, argv) == 0) {
         printf("Robot: Initialized\n");
         printf("SICK: Initialized\n");
     }
