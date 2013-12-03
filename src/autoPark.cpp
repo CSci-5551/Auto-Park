@@ -64,6 +64,14 @@ int initialize(int *argc, char **argv) {
     }
     printf("SICK: Connected\n");
   
+    // Setup actions
+    ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
+    // TODO: Turning actions
+    // TODO: Reverse action
+
+    // Add the actions
+    robot.addAction(&constantVelocity, 20);
+
     // Return 0 for successful initialization
     return 0;
 }
@@ -75,12 +83,8 @@ int initialize(int *argc, char **argv) {
  */
 void scanForSpace() {
     int t, cnt;
-    double laser_dist;
-    double laser_angle;
-    double dist_bound;
-    double init_dist;
-    bool depth_ok;
-    bool length_ok;
+    double laser_dist, laser_angle, dist_bound, init_dist;
+    bool depth_ok, length_ok;
     std::list<ArSensorReading *> *readings;
     std::list<ArSensorReading *>::iterator it;
     
@@ -89,8 +93,11 @@ void scanForSpace() {
     laser_angle = LASER_ANGLE;
     depth_ok = false;
     length_ok = false;
-
-    // TODO: Begin moving forward
+    
+    // Begin moving forward
+    robot.lock();
+    robot.comInt(ArCommands::ENABLE, 1);
+    robot.unlock();
     
     // Start taking in readings
     it = readings->begin();
@@ -98,7 +105,9 @@ void scanForSpace() {
     // Set initial distance
     init_dist = (*it)->getRange();
     
+    // Loop to keep scanning until spot is found 
     while (it != readings->end()) {
+
         // Get distance
 	laser_dist=(*it)->getRange();
         
