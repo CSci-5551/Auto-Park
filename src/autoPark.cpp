@@ -13,11 +13,13 @@ using namespace std;
 // Constants
 #define TURNING_RADIUS 1000
 #define ROBOT_RADIUS 227.5
-#define DEPTH_BOUND 1000
-#define MAR_ERR 50
-#define VMAX 500
-#define LASER_ANGLE 90
+#define DEPTH_BOUND 1000.0
+#define MAR_ERR 50.0
+#define VMAX 500.0
+#define LASER_ANGLE 90.0
 #define OMEGA_MAX 2.618
+#define TRUE 1
+#define FALSE 0
 
 // Global variables for robot and laser
 ArRobot robot;
@@ -78,6 +80,7 @@ int initialize(int *argc, char **argv) {
 void scanForSpace() {
     int t, cnt;
     double laser_dist;
+    double init_dist;
     double laser_angle[900];
     double dist_bound;
     bool depth_ok;
@@ -87,15 +90,15 @@ void scanForSpace() {
     
     // Set laser angle
     readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
-    laser_angle = LASER_ANGLE;
+    //laser_angle = LASER_ANGLE;
     depth_ok = FALSE;
     
     // TODO: Begin moving forward
     
     // Look for long enough space
-    init_dist = readings->getRange();
+    //init_dist = readings->getRange();
     
-    for (it=readings->begin(); it!=readings->(); it++) {
+    for (it=readings->begin(); it!=readings->end(); it++) {
         laser_dist=(*it)->getRange();
         
         if (laser_dist > (DEPTH_BOUND+MAR_ERR+init_dist)) {
@@ -105,7 +108,7 @@ void scanForSpace() {
             
         }
     }
-    printf("\nFound acceptable parking space\n")
+    printf("\nFound acceptable parking space\n");
     return;
 }
 
