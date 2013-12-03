@@ -76,8 +76,9 @@ int initialize(int *argc, char **argv) {
 void scanForSpace() {
     int t, cnt;
     double laser_dist;
-    double laser_angle[900];
+    double laser_angle;
     double dist_bound;
+    double init_dist;
     bool depth_ok;
     bool length_ok;
     std::list<ArSensorReading *> *readings;
@@ -86,25 +87,30 @@ void scanForSpace() {
     // Set laser angle
     readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
     laser_angle = LASER_ANGLE;
-    depth_ok = FALSE;
-    length_ok = FALSE;
+    depth_ok = false;
+    length_ok = false;
 
     // TODO: Begin moving forward
     
-    // Look for long enough space
-    init_dist = readings->getRange();
+    // Start taking in readings
+    it = readings->begin();
+
+    // Set initial distance
+    init_dist = (*it)->getRange();
     
-    for (it=readings->begin(); it!=readings->(); it++) {
-        laser_dist=(*it)->getRange();
+    while (it != readings->end()) {
+        // Get distance
+	laser_dist=(*it)->getRange();
         
+	// Check distance against boundaries
         if (laser_dist > (DEPTH_BOUND+MAR_ERR+init_dist)) {
-            depth_ok = TRUE;
+            depth_ok = true;
             // TODO: Set a marker at current distance, check if depth
             // is still ok at current_distance + 1500 (length of spot).
-            
         }
+	it++;
     }
-    printf("\nFound acceptable parking space\n")
+    printf("\nFound acceptable parking space\n");
     return;
 }
 
