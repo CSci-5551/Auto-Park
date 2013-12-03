@@ -18,7 +18,7 @@ ArSick sick;
  * initialize
  * - A function to initialize the robot.
  */
-int initialize() {
+int initialize(int *argc, char **argv) {
     
     // Manditory init call
     Aria::init();
@@ -27,7 +27,7 @@ int initialize() {
     robot.addRangeDevice(&sick);
     
     // Setup connector
-    ArSimpleConnector connector(&argc, argv);
+    ArSimpleConnector connector(argc, argv);
     connector.parseArgs();
 
     // Try to connect, exit on failure
@@ -65,6 +65,13 @@ int initialize() {
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
+  int t, cnt;
+  double laser_dist[900];
+  double laser_angle[900];
+  std::list<ArSensorReading *> *readings;
+  std::list<ArSensorReading *>::iterator it;
+
+  cnt = 0;
     while(cnt<10000)
 	{
 		readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings();//CurrentBuffer..
@@ -90,10 +97,10 @@ void scanForSpace() {
  * main
  * - Main function for the parking program.
  */
-int main() {
+int main(int argc, char **argv) {
     
     // Initialize the Robot
-    if (initialize() == 0) {
+  if (initialize(&argc, argv) == 0) {
         printf("Robot: Initialized\n");
         printf("SICK: Initialized\n");
     }
@@ -118,4 +125,4 @@ int main() {
     return 0;
 }
 
-# EOF #
+// EOF
