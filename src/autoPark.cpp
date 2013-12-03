@@ -13,10 +13,10 @@ using namespace std;
 // Constants
 #define TURNING_RADIUS 1000
 #define ROBOT_RADIUS 227.5
-#define DEPTH_BOUND 1000.0
-#define MAR_ERR 50.0
-#define VMAX 500.0
-#define LASER_ANGLE 90.0
+#define DEPTH_BOUND 1000
+#define MAR_ERR 50
+#define VMAX 500
+#define LASER_ANGLE 90
 #define OMEGA_MAX 2.618
 #define TRUE 1
 #define FALSE 0
@@ -43,16 +43,15 @@ int initialize(int *argc, char **argv) {
     connector.parseArgs();
 
     // Try to connect, exit on failure
-	if (!connector.connectRobot(&robot))
-	{
-		printf("Could not connect to robot... exiting\n");
-		Aria::shutdown();
-		return 1;
-	}
+    if (!connector.connectRobot(&robot)) {
+        printf("Could not connect to robot... exiting\n");
+	Aria::shutdown();
+	return 1;
+    }
     printf("Robot: Connected\n");
     
     // Start the robot running so that if we lose connection the run stops
-	robot.runAsync(true);
+    robot.runAsync(true);
     
     // Set up the laser
     sick.configureShort(false,ArSick::BAUD38400,ArSick::DEGREES180,ArSick::INCREMENT_ONE);
@@ -60,14 +59,21 @@ int initialize(int *argc, char **argv) {
     sick.runAsync();
     
     // Do a blocking connect, if it fails exit
-    if (!sick.blockingConnect())
-    {
+    if (!sick.blockingConnect()) {
         printf("Could not connect to SICK laser... exiting\n");
         Aria::shutdown();
         return 1;
     }
     printf("SICK: Connected\n");
   
+    // Setup actions
+    ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
+    // TODO: Turning actions
+    // TODO: Reverse action
+
+    // Add the actions
+    robot.addAction(&constantVelocity, 20);
+
     // Return 0 for successful initialization
     return 0;
 }
@@ -79,34 +85,42 @@ int initialize(int *argc, char **argv) {
  */
 void scanForSpace() {
     int t, cnt;
-    double laser_dist;
-    double init_dist;
-    double laser_angle[900];
-    double dist_bound;
-    bool depth_ok;
-    bool length_ok;
+    double laser_dist, laser_angle, dist_bound, init_dist;
+    bool depth_ok, length_ok;
     std::list<ArSensorReading *> *readings;
     std::list<ArSensorReading *>::iterator it;
     
     // Set laser angle
     readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
-    //laser_angle = LASER_ANGLE;
-    depth_ok = FALSE;
+    laser_angle = LASER_ANGLE;
+    depth_ok = false;
+    length_ok = false;
     
-    // TODO: Begin moving forward
+    // Begin moving forward
+    robot.lock();
+    robot.comInt(ArCommands::ENABLE, 1);
+    robot.unlock();
     
-    // Look for long enough space
-    //init_dist = readings->getRange();
+    // Start taking in readings
+    it = readings->begin();
+
+    // Set initial distance
+    init_dist = (*it)->getRange();
     
-    for (it=readings->begin(); it!=readings->end(); it++) {
-        laser_dist=(*it)->getRange();
+    // Loop to keep scanning until spot is found 
+    while (it != readings->end()) {
+
+        // Get distance
+	laser_dist=(*it)->getRange();
         
+	// Check distance against boundaries
         if (laser_dist > (DEPTH_BOUND+MAR_ERR+init_dist)) {
-            depth_ok = TRUE;
+            depth_ok = true;
             // TODO: Set a marker at current distance, check if depth
             // is still ok at current_distance + 1500 (length of spot).
             
         }
+	it++;
     }
     printf("\nFound acceptable parking space\n");
     return;
@@ -141,7 +155,7 @@ void parkRobot() {
 int main(int argc, char **argv) {
     
     // Initialize the Robot
-  if (initialize(&argc, argv) == 0) {
+    if (initialize(&argc, argv) == 0) {
         printf("Robot: Initialized\n");
         printf("SICK: Initialized\n");
     }
