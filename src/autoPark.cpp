@@ -31,41 +31,66 @@ FILE *logfp;
  * - A function to initialize the robot.
  */
 int initialize(int *argc, char **argv) {
+    ArSerialConnection laserCon;
+    ArSerialConnection con;
     
     // Manditory init call
     Aria::init();
 
+    // Parse all our args
+    ArSimpleConnector connector(argc, argv);
+    connector.parseArgs();
+    
+    if (argc > 1)
+    {
+        connector.logOptions();
+        exit(1);
+    }
+    
     // Add the laser device
     robot.addRangeDevice(&sick);
     
-    // Setup connector
-    ArSimpleConnector connector(argc, argv);
-    connector.parseArgs();
-
-    // Try to connect, exit on failure
-    if (!connector.connectRobot(&robot)) {
-        printf("Could not connect to robot... exiting\n");
-	Aria::shutdown();
-	return 1;
-    }
-    printf("Robot: Connected\n");
-    
-    // Start the robot running so that if we lose connection the run stops
-    robot.runAsync(true);
-    
-    // Set up the laser
-    // sick.configureShort(false,ArSick::BAUD38400,ArSick::DEGREES180,ArSick::INCREMENT_ONE);
-    connector.setupLaser(&sick);
-    sick.runAsync();
-    
-    // Do a blocking connect, if it fails exit
-    if (!sick.blockingConnect()) {
-        printf("Could not connect to SICK laser... exiting\n");
+    // Connect to the robot using default port, exit on failure
+    if ((ret = con.open("/dev/ttyUSB1")) != 0)
+    {
+        str = con.getOpenMessage(ret);
+        printf("Open failed: %s\n", str.c_str());
         Aria::shutdown();
         return 1;
     }
-    printf("SICK: Connected\n");
-  
+
+    // Set the robot to use the given connection
+    robot.setDeviceConnection(&con);
+    
+    // Do a blocking connect, exit on failure
+    if (!robot.blockingConnect())
+    {
+        printf("Could not connect to robot... exiting\n");
+        Aria::shutdown();
+        return 1;
+    }
+    
+    // Set robot to stop the run if the connection is broken
+    robot.runAsync(true);
+    
+    // Connect to the laser using default port, exit on failure
+    sick.setDeviceConnection(&laserCon);
+    if((ret=laserCon.open("/dev/ttyUSB0")) !=0){
+        Aria::shutdown();
+        return 1;
+    }
+    
+    // Set laser to stop the run if connection is broken
+    sick.configureShort(false);
+    sick.runAsync();
+    
+    // Do a blocking connect, exit on failure
+    if(!sick.blockingConnect()){
+        printf("Could not get sick...exiting\n");
+        Aria::shutdown();
+        return 1;
+    }
+    printf("We are connected to the laser!");
     // Setup actions
     ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
     // TODO: Turning actions
