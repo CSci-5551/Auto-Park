@@ -14,7 +14,7 @@ autoPark.o: autoPark.cpp
 	$(CC) $(CFLAGS) $(ARIA_INCLUDE) -c autoPark.cpp $(ARIA_LINK)
 
 run: autoPark
-	./autoPark
+	./autoPark -rp /dev/ttyUSB1 -lp /dev/ttyUSB0
 
 clean:
 	rm -rf *o autoPark logfile.txt
