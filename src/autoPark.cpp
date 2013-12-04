@@ -87,6 +87,7 @@ int initialize(int *argc, char **argv) {
         return 1;
     }
     printf("We are connected to the laser!");
+    
     // Setup actions
     ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
     // TODO: Turning actions
