@@ -17,6 +17,6 @@ run: autoPark
 	./autoPark
 
 clean:
-	rm -rf *o autoPark
+	rm -rf *o autoPark logfile.txt
 
 # EOF #
