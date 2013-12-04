@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 //    return 1;
 //  }
 // open the connection, just using the defaults, if it fails, exit
-  if ((ret = con.open("/dev/ttyUSB0")) != 0)
+  if ((ret = con.open("/dev/ttyUSB1")) != 0)
   {
     str = con.getOpenMessage(ret);
     printf("Open failed: %s\n", str.c_str());
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
  //   return 1;
  // }
   sick.setDeviceConnection(&laserCon);
-  if((ret=laserCon.open("/dev/ttyUSB1")) !=0){
+  if((ret=laserCon.open("/dev/ttyUSB0")) !=0){
 	  Aria::shutdown();
 	  return 1;
   }

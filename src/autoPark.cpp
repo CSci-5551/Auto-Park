@@ -24,7 +24,7 @@ using namespace std;
 // Global variables for robot and laser
 ArRobot robot;
 ArSick sick;
-
+FILE *logfp;
 
 /*
  * initialize
@@ -54,7 +54,7 @@ int initialize(int *argc, char **argv) {
     robot.runAsync(true);
     
     // Set up the laser
-    sick.configureShort(false,ArSick::BAUD38400,ArSick::DEGREES180,ArSick::INCREMENT_ONE);
+    // sick.configureShort(false,ArSick::BAUD38400,ArSick::DEGREES180,ArSick::INCREMENT_ONE);
     connector.setupLaser(&sick);
     sick.runAsync();
     
@@ -84,51 +84,36 @@ int initialize(int *argc, char **argv) {
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
-    int t, cnt;
-    double laser_dist, laser_angle, dist_bound, init_dist;
-    bool depth_ok, length_ok;
-    std::list<ArSensorReading *> *readings;
-    std::list<ArSensorReading *>::iterator it;
-    
-    // Set laser angle
-    readings=(list<ArSensorReading *,allocator<ArSensorReading *> > *)sick.getRawReadings(); // Current buffer
-    laser_angle = LASER_ANGLE;
-    depth_ok = false;
-    length_ok = false;
-    
-    // Begin moving forward
-    robot.lock();
-    robot.comInt(ArCommands::ENABLE, 1);
-    robot.unlock();
-    
-    // Start taking in readings
-    it = readings->begin();
+    int i;
+    double laser_dist[900], laser_angle[900];
+    const std::list<ArSensorReading *> *readingsList;
+    std::list<ArSensorReading *>::const_iterator it;
 
-    // Set initial distance
-    init_dist = (*it)->getRange();
-    
-    // Loop to keep scanning until spot is found 
-    while (it != readings->end()) {
+    // Initialize vars
+    i = -1;
+    readingsList = sick.getRawReadings();
+    printf("Scanning...");
 
-        // Get distance
-	laser_dist=(*it)->getRange();
-        
-	// Check distance against boundaries
-        if (laser_dist > (DEPTH_BOUND+MAR_ERR+init_dist)) {
-            depth_ok = true;
-            // TODO: Set a marker at current distance, check if depth
-            // is still ok at current_distance + 1500 (length of spot).
-            
-        }
-	it++;
+    // Store readings in array
+    for (it = readingsList->begin(); it != readingsList->end(); it++) {
+        i++;
+	laser_dist[i] = (*it)->getRange();
+	laser_angle[i] = (*it)->getSensorTh();
     }
-    printf("\nFound acceptable parking space\n");
+
+    // Print results to logfile
+    for (i = 0; i < 190; i++) { 
+        fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n", 
+                i, laser_dist[i], laser_angle[i]); 
+    }
+    fprintf(logfp, "\n");
+    printf("done\n");
     return;
 }
 
 
 /*
- * parkRobot()
+ * parkRobot
  * - Function to park the robot.
  */
 void parkRobot() {
@@ -149,29 +134,48 @@ void parkRobot() {
 
 
 /*
+ * openLogFile
+ * - Function to open a logfile and write header.
+ */
+void openLogFile() {
+    logfp = fopen("logfile.txt", "w");
+    fprintf(logfp, "######################################################\n");
+    fprintf(logfp, "## AUTO-PARK LOGFILE                                ##\n");
+    fprintf(logfp, "## - This file contains data for a run of Auto-Park ##\n");
+    fprintf(logfp, "######################################################\n\n");
+    return;
+}
+
+
+/*
  * main
  * - Main function for the parking program.
  */
 int main(int argc, char **argv) {
-    
+    // Open the logfile
+    openLogFile();
+
     // Initialize the Robot
+    fprintf(logfp, "## INITIALIZATION ##\n");
     if (initialize(&argc, argv) == 0) {
-        printf("Robot: Initialized\n");
-        printf("SICK: Initialized\n");
+        fprintf(logfp, "Robot: Initialized\n");
+        fprintf(logfp, "SICK: Initialized\n\n");
     }
     else {
-        printf("Initialization failed\n");
+        fprintf(logfp, "Initialization failed\n\n");
     }
   
     // Scan for parking space
+    fprintf(logfp, "## SCAN FOR SPACE ##\n");
     scanForSpace();
   
     // When parking space is found, execute park function
     parkRobot();
     
     // Shutdown the robot
-    robot.waitForRunExit();
+    //robot.waitForRunExit();
     Aria::shutdown();
+    fclose(logfp);
     return 0;
 }
 
