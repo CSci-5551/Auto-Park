@@ -119,8 +119,8 @@ void scanForSpace() {
     // Store readings in array
     for (it = readingsList->begin(); it != readingsList->end(); it++) {
         i++;
-	laser_dist[i] = (*it)->getRange();
-	laser_angle[i] = (*it)->getSensorTh();
+        laser_dist[i] = (*it)->getRange();
+        laser_angle[i] = (*it)->getSensorTh();
     }
 
     // Print results to logfile
