@@ -40,7 +40,7 @@ int initialize(int *argc, char **argv) {
     Aria::init();
 
     // set up our parser
-    ArArgumentParser parser(&argc, argv);
+    ArArgumentParser parser(argc, argv);
     
     // set up our simple connector
     ArSimpleConnector simpleConnector(&parser);
@@ -52,14 +52,13 @@ int initialize(int *argc, char **argv) {
     parser.loadDefaultArguments();
     
     // add our right increments and degrees as a deafult
-    parser.addDefaultArgument("-laserDegrees 90 -laserIncrement one");
+    parser.addDefaultArgument("-laserDegrees 180 -laserIncrement one");
     
     // parse the command line... fail and print the help if the parsing fails
     // or if the help was requested
     if (!simpleConnector.parseArgs() || !parser.checkHelpAndWarnUnparsed(1))
     {
         simpleConnector.logOptions();
-        keyHandler.restore();
         exit(1);
     }
     
@@ -68,7 +67,7 @@ int initialize(int *argc, char **argv) {
     
     
     simpleConnector.setupLaser(&sick);
-    // ArSickLogger logger(&robot, &sick, 300, 25, filename.c_str(), false);
+    ArSickLogger logger(&robot, &sick, 300, 25, "testlog.txt", false);
     
     // Set laser to stop the run if connection is broken
     sick.runAsync();
