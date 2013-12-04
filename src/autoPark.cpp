@@ -31,6 +31,8 @@ FILE *logfp;
  * - A function to initialize the robot.
  */
 int initialize(int *argc, char **argv) {
+    int ret;
+    std::string str;
     ArSerialConnection laserCon;
     ArSerialConnection con;
     
@@ -41,7 +43,7 @@ int initialize(int *argc, char **argv) {
     ArSimpleConnector connector(argc, argv);
     connector.parseArgs();
     
-    if (argc > 1)
+    if (&argc > 1)
     {
         connector.logOptions();
         exit(1);
@@ -75,7 +77,7 @@ int initialize(int *argc, char **argv) {
     
     // Connect to the laser using default port, exit on failure
     sick.setDeviceConnection(&laserCon);
-    if((ret=laserCon.open("/dev/ttyUSB0")) !=0){
+    if((ret = laserCon.open("/dev/ttyUSB0")) !=0){
         Aria::shutdown();
         return 1;
     }
