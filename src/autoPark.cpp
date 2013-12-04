@@ -43,12 +43,6 @@ int initialize(int *argc, char **argv) {
     ArSimpleConnector connector(argc, argv);
     connector.parseArgs();
     
-    if (&argc > 1)
-    {
-        connector.logOptions();
-        exit(1);
-    }
-    
     // Add the laser device
     robot.addRangeDevice(&sick);
     
