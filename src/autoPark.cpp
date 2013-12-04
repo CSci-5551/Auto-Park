@@ -34,55 +34,49 @@ int initialize(int *argc, char **argv) {
     int ret;
     std::string str;
     ArSerialConnection laserCon;
-    ArSerialConnection con;
+    ArSerialConnection serCon;
     
     // Manditory init call
     Aria::init();
 
-    // Parse all our args
-    ArSimpleConnector connector(argc, argv);
-    connector.parseArgs();
+    // set up our parser
+    ArArgumentParser parser(&argc, argv);
+    
+    // set up our simple connector
+    ArSimpleConnector simpleConnector(&parser);
     
     // Add the laser device
     robot.addRangeDevice(&sick);
     
-    // Connect to the robot using default port, exit on failure
-    if ((ret = con.open("/dev/ttyUSB1")) != 0)
-    {
-        str = con.getOpenMessage(ret);
-        printf("Open failed: %s\n", str.c_str());
-        Aria::shutdown();
-        return 1;
-    }
-
-    // Set the robot to use the given connection
-    robot.setDeviceConnection(&con);
+    // load the default arguments
+    parser.loadDefaultArguments();
     
-    // Do a blocking connect, exit on failure
-    if (!robot.blockingConnect())
+    // add our right increments and degrees as a deafult
+    parser.addDefaultArgument("-laserDegrees 90 -laserIncrement one");
+    
+    // parse the command line... fail and print the help if the parsing fails
+    // or if the help was requested
+    if (!simpleConnector.parseArgs() || !parser.checkHelpAndWarnUnparsed(1))
     {
-        printf("Could not connect to robot... exiting\n");
-        Aria::shutdown();
-        return 1;
+        simpleConnector.logOptions();
+        keyHandler.restore();
+        exit(1);
     }
     
     // Set robot to stop the run if the connection is broken
     robot.runAsync(true);
     
-    // Connect to the laser using default port, exit on failure
-    sick.setDeviceConnection(&laserCon);
-    if((ret = laserCon.open("/dev/ttyUSB0")) !=0){
-        Aria::shutdown();
-        return 1;
-    }
+    
+    simpleConnector.setupLaser(&sick);
+    // ArSickLogger logger(&robot, &sick, 300, 25, filename.c_str(), false);
     
     // Set laser to stop the run if connection is broken
-    sick.configureShort(false);
     sick.runAsync();
     
     // Do a blocking connect, exit on failure
-    if(!sick.blockingConnect()){
-        printf("Could not get sick...exiting\n");
+    if (!sick.blockingConnect())
+    {
+        printf("Could not connect to laser... exiting\n");
         Aria::shutdown();
         return 1;
     }
