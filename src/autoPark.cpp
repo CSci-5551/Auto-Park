@@ -35,38 +35,44 @@ int initialize(int *argc, char **argv) {
     std::string str;
     ArSerialConnection laserCon;
     ArSerialConnection serCon;
+    ArArgumentParser parser(argc, argv);
+    ArSimpleConnector connector(&parser);
     
     // Manditory init call
     Aria::init();
-
-    // set up our parser
-    ArArgumentParser parser(argc, argv);
     
-    // set up our simple connector
-    ArSimpleConnector simpleConnector(&parser);
+    // Load the default arguments
+    parser.loadDefaultArguments();
+    
+    // Add our right increments and degrees as a deafult
+    parser.addDefaultArgument("-laserDegrees 180 -laserIncrement one");
+    
+    // Parse the command line
+    if (!connector.parseArgs() || !parser.checkHelpAndWarnUnparsed(1))
+    {
+        connector.logOptions();
+        exit(1);
+    }
     
     // Add the laser device
     robot.addRangeDevice(&sick);
     
-    // load the default arguments
-    parser.loadDefaultArguments();
-    
-    // add our right increments and degrees as a deafult
-    parser.addDefaultArgument("-laserDegrees 180 -laserIncrement one");
-    
-    // parse the command line... fail and print the help if the parsing fails
-    // or if the help was requested
-    if (!simpleConnector.parseArgs() || !parser.checkHelpAndWarnUnparsed(1))
+    // Try to connect to the robot, if we fail exit
+    if (!connector.connectRobot(&robot))
     {
-        simpleConnector.logOptions();
-        exit(1);
+        printf("Robot: Could not connect...exiting\n");
+        Aria::shutdown();
+        return 1;
     }
+    printf("Robot: Connected\n");
     
     // Set robot to stop the run if the connection is broken
     robot.runAsync(true);
     
+    // Setup laser
+    connector.setupLaser(&sick);
     
-    simpleConnector.setupLaser(&sick);
+    // Create logfile2 (Aria logfile)
     ArSickLogger logger(&robot, &sick, 300, 25, "testlog.txt", false);
     
     // Set laser to stop the run if connection is broken
@@ -75,21 +81,19 @@ int initialize(int *argc, char **argv) {
     // Do a blocking connect, exit on failure
     if (!sick.blockingConnect())
     {
-        printf("Could not connect to laser... exiting\n");
+        printf("Laser: Could not connect...exiting\n");
         Aria::shutdown();
         return 1;
     }
-    printf("We are connected to the laser!");
+    printf("Laser: Connected\n");
     
-    // Setup actions
-    ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
-    // TODO: Turning actions
-    // TODO: Reverse action
+    // TODO: Setup actions
+    // example - ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
 
-    // Add the actions
-    robot.addAction(&constantVelocity, 20);
+    // TODO: Add the actions
+    // example - robot.addAction(&constantVelocity, 20);
 
-    // Return 0 for successful initialization
+
     return 0;
 }
 
@@ -99,28 +103,45 @@ int initialize(int *argc, char **argv) {
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
-    int i;
-    double laser_dist[900], laser_angle[900];
+    int i, times, max, nign;
+    double laser_dist[900], laser_angle[900], init_dist, init_angle;
     const std::list<ArSensorReading *> *readingsList;
     std::list<ArSensorReading *>::const_iterator it;
 
     // Initialize vars
-    i = -1;
-    readingsList = sick.getRawReadings();
+    i = 0;
+    times = 0;
     printf("Scanning...");
-
-    // Store readings in array
-    for (it = readingsList->begin(); it != readingsList->end(); it++) {
+    
+    init_dist = sick.getCurrentBuffer().getClosestPolar(-90, 90, ArPose(0, 0), 30000, &init_angle);
+    
+    // Lock the laser
+    sick.lockDevice();
+        
+    // Current closest reading within a degree range
+    init_dist = sick.currentReadingPolar(-90, 90, &init_angle);
+    if (dist < sick.getMaxRange())
+        fprintf(logfp, "Closest reading %.2f mm away at %.2f degrees\n\n", init_dist, init_angle);
+    else
+        printf(logfp, "No close reading.\n\n");
+        
+    // Take readings and store angle and distance results in respective arrays
+    readings = sick.getCurrentBuffer();
+    for (it = readings->begin(), it != readings->end(); it++) {
         i++;
-        laser_dist[i] = (*it)->getRange();
-        laser_angle[i] = (*it)->getSensorTh();
+        laser_dist[i] = (*it)->findDistanceTo(ArPose(0, 0));
+        laser_angle[i] = (*it)->findAngleTo(ArPose(0, 0));
     }
-
-    // Print results to logfile
-    for (i = 0; i < 190; i++) { 
-        fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n", 
-                i, laser_dist[i], laser_angle[i]); 
-    }
+    max = i;
+        
+    // Print results to logfile (this is inefficient, if works try to put in above loop)
+    for (i = 0; i < max; i++)
+        fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n", i, laser_dist[i], laser_angle[i]);
+    
+    // Unlock laser and return
+    sick.unlockDevice();
+    ArUtil::sleep(100);
+    puts("");
     fprintf(logfp, "\n");
     printf("done\n");
     return;
@@ -167,6 +188,7 @@ void openLogFile() {
  * - Main function for the parking program.
  */
 int main(int argc, char **argv) {
+    
     // Open the logfile
     openLogFile();
 
