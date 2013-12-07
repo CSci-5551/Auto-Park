@@ -103,10 +103,10 @@ int initialize(int *argc, char **argv) {
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
-    int i, times, max, nign;
+    int i, times, max;
     double laser_dist[900], laser_angle[900], init_dist, init_angle;
-    const std::list<ArSensorReading *> *readingsList;
-    std::list<ArSensorReading *>::const_iterator it;
+    std::list<ArPoseWithTime *> *readings;
+    std::list<ArPoseWithTime *>::iterator it;
 
     // Initialize vars
     i = 0;
@@ -120,10 +120,10 @@ void scanForSpace() {
         
     // Current closest reading within a degree range
     init_dist = sick.currentReadingPolar(-90, 90, &init_angle);
-    if (dist < sick.getMaxRange())
+    if (init_dist < sick.getMaxRange())
         fprintf(logfp, "Closest reading %.2f mm away at %.2f degrees\n\n", init_dist, init_angle);
     else
-        printf(logfp, "No close reading.\n\n");
+        fprintf(logfp, "No close reading.\n\n");
         
     // Take readings and store angle and distance results in respective arrays
     readings = sick.getCurrentBuffer();
