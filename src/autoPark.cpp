@@ -145,6 +145,30 @@ void takeReadings() {
 
 
 /*
+ * findZeroAngle
+ * - Function to park the robot.
+ */
+int findZeroAngle() {
+    int i;
+    int zero_index;
+    reading current;
+    
+    i = 0;
+    current = reading_array[i];
+    while (current.distance != NULL) {
+        
+        // May need to change to find first negative, check on first run
+        if (current.angle > 0 && zero_index == NULL) {
+            zero_index = i;
+        }
+        i++;
+    }
+    
+    return zero_index;
+}
+
+
+/*
  * findCorners
  * - A function to find the corners of a parking space
  */
@@ -211,29 +235,6 @@ void parkRobot() {
     // TODO: Execute movements using calculated corners.
     
     return;
-}
-            
-/*
- * findZeroAngle
- * - Function to park the robot.
- */
-int findZeroAngle() {
-    int i;
-    int zero_index;
-    reading current;
-    
-    i = 0;
-    current = reading_array[i];
-    while (current.distance != NULL) {
-        
-        // May need to change to find first negative, check on first run
-        if (current.angle > 0 && zero_index == NULL) {
-            zero_index = i;
-        }
-        i++;
-    }
-
-    return zero_index;
 }
 
 
