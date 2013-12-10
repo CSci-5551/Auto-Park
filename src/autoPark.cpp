@@ -24,6 +24,8 @@ using namespace std;
 // Global variables for robot and laser
 ArRobot robot;
 ArSick sick;
+double laser_dist[500];
+double laser_angle[500];
 FILE *logfp;
 
 /*
@@ -103,41 +105,34 @@ int initialize(int *argc, char **argv) {
  * - A function to search for an open space using the SICK laser.
  */
 void scanForSpace() {
-    int i, times, max;
-    double laser_dist[900], laser_angle[900], init_dist, init_angle;
+    int i;
+    double dist, angle;
     std::list<ArPoseWithTime *> *readings;
     std::list<ArPoseWithTime *>::iterator it;
 
     // Initialize vars
     i = 0;
-    times = 0;
     printf("Scanning...");
     ArUtil::sleep(500);
-    
-    // init_dist = sick.getCurrentBuffer().getClosestPolar(-90, 90, ArPose(0, 0), 30000, &init_angle);
     
     // Lock the laser
     sick.lockDevice();
         
     // Current closest reading within a degree range
-    laser_dist[0] = sick.currentReadingPolar(-90, 90, &laser_angle[0]);
-    if (laser_dist[0] < sick.getMaxRange())
-        printf("Closest reading %.2f mm away at %.2f degrees\n", laser_dist[0], laser_angle[0]);
+    dist = sick.currentReadingPolar(-90, 90, &angle);
+    if (dist < sick.getMaxRange())
+        printf("Closest reading %.2f mm away at %.2f degrees\n", dist, angle);
     else
         printf("No close reading.\n");
     
     // Take readings and store angle and distance results in respective arrays
     readings = sick.getCurrentBuffer();
     for (it = readings->begin(); it != readings->end(); it++) {
-        i++;
         laser_dist[i] = (*it)->findDistanceTo(ArPose(0, 0));
         laser_angle[i] = (*it)->findAngleTo(ArPose(0, 0));
-    }
-    max = i;
-        
-    // Print results to logfile (this is inefficient, if works try to put in above loop)
-    for (i = 0; i < max; i++)
         fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n", i, laser_dist[i], laser_angle[i]);
+        i++;
+    }
     
     // Unlock laser and return
     sick.unlockDevice();
