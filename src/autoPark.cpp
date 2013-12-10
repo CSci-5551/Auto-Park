@@ -112,6 +112,7 @@ void scanForSpace() {
     i = 0;
     times = 0;
     printf("Scanning...");
+    ArUtil::sleep(500);
     
     // init_dist = sick.getCurrentBuffer().getClosestPolar(-90, 90, ArPose(0, 0), 30000, &init_angle);
     
