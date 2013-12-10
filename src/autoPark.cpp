@@ -29,7 +29,7 @@ struct reading {
 // Global variables for robot and laser
 ArRobot robot;
 ArSick sick;
-reading reading_array[500];
+reading reading_array[400];
 reading first_corner;
 reading second_corner;
 reading third_corner;
@@ -56,7 +56,7 @@ int initialize(int *argc, char **argv) {
     parser.loadDefaultArguments();
     
     // Add our right increments and degrees as a deafult
-    parser.addDefaultArgument("-laserDegrees 180 -laserIncrement one");
+    parser.addDefaultArgument("-laserDegrees 180 -laserIncrement half");
     
     // Parse the command line
     if (!connector.parseArgs() || !parser.checkHelpAndWarnUnparsed(1))
@@ -149,17 +149,22 @@ void takeReadings() {
  * - A function to find the corners of a parking space
  */
 void findCorners() {
-    // Find the first corner
     int i = 0;
     double average;
+    double diff;
     reading current;
     reading next;
     
+    average = 0;
     next = reading_array[0];
     while (next.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
-        if (next.distance < current.distance && first_corner.distance == NULL) {
+        
+        // Find the first corner
+        diff = next.distance - current.distance;
+        average = (average + diff) / (i+1);
+        if (diff > average + MAR_ERR && first_corner.distance == NULL) {
             first_corner.distance = current.distance;
             first_corner.angle = current.angle;
             fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
@@ -167,16 +172,34 @@ void findCorners() {
         }
         i++;
     }
-    // TODO: Find the second corner
     
-    // TODO: Find the third corner
+    // Find the reading index of the zero angle
+    i = findZeroAngle();
     
-    // TODO: Find the fourth courner
-    
-    // TODO: Find the fifth corner
+    for (i > 1; i--) {
+        current = reading_array[i];
+        next = reading_array[i-1];
+        
+        // Find the third corner
+        if (next.distance < current.distance && third_corner.distance == NULL) {
+            third_corner.distance = current.distance;
+            third_corner.angle = current.angle;
+            fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n",
+                    third_corner.distance, third_corner.angle);
+            
+        }
+        
+        // Find the second corner
+        if (next.distance > current.distance && third_corner.distance != NULL) {
+            second_corner.distance = current.distance;
+            second_corner.angle = current.angle;
+            fprintf(logfp, "Second Corner: Distance: %f\tAngle: %f\n",
+                    second_corner.distance, second_corner.angle);
+        }
+        
+    }
     
     return;
-    
 }
 
 
@@ -188,6 +211,29 @@ void parkRobot() {
     // TODO: Execute movements using calculated corners.
     
     return;
+}
+            
+/*
+ * findZeroAngle
+ * - Function to park the robot.
+ */
+int findZeroAngle() {
+    int i;
+    int zero_index;
+    reading current;
+    
+    i = 0;
+    current = reading_array[i];
+    while (current.distance != NULL) {
+        
+        // May need to change to find first negative, check on first run
+        if (current.angle > 0 && zero_index == NULL) {
+            zero_index = i;
+        }
+        i++;
+    }
+
+    return zero_index;
 }
 
 
