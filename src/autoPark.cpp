@@ -159,7 +159,7 @@ void findCorners() {
     while (next.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
-        if (next.distance < current.distance && first_corner != NULL) {
+        if (next.distance < current.distance && first_corner.distance != NULL) {
             first_corner.distance = current.distance;
             first_corner.angle = current.angle;
             fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
