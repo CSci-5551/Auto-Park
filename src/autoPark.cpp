@@ -158,7 +158,7 @@ int findZeroAngle() {
     while (current.distance != NULL) {
         
         // May need to change to find first negative, check on first run
-        if (current.angle > 0 && zero_index == NULL) {
+        if (current.angle < -100 && zero_index == NULL) {
             zero_index = i;
         }
         i++;
