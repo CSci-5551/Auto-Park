@@ -160,14 +160,13 @@ int findZeroAngle() {
     while (current.distance != NULL) {
         current = reading_array[i];
         
-        // May need to change to find first negative, check on first run
-        if (current.angle < -100.00 && zero_index == 0) {
-            zero_index = i;
+        // Return the index of the first negative angle that is less than 100
+        if (current.angle < -100.00) {
+            fprintf(logfp, "180 Degrees: Index %n\n", i);
+            return i;
         }
         i++;
     }
-    fprintf(logfp, "180 Degrees: Index %n\n", zero_index);
-    return zero_index;
 }
 
 
