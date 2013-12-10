@@ -127,10 +127,10 @@ void takeReadings() {
     // Take readings and store angle and distance results in reading array
     readings = sick.getCurrentBuffer();
     for (it = readings->begin(); it != readings->end(); it++) {
-        reading_array[i].dist = (*it)->findDistanceTo(ArPose(0, 0));
+        reading_array[i].distance = (*it)->findDistanceTo(ArPose(0, 0));
         reading_array[i].angle = (*it)->findAngleTo(ArPose(0, 0));
         fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n",
-                i, reading_array[i].dist, reading_array[i].angle);
+                i, reading_array[i].distance, reading_array[i].angle);
         i++;
     }
     
@@ -152,8 +152,8 @@ void findCorners() {
     // Find the first corner
     int i = 0;
     double average;
-    reading *current;
-    reading *next;
+    reading current;
+    reading next;
     
     next = reading_array[0];
     while (next != NULL) {
