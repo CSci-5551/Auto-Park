@@ -163,7 +163,7 @@ int findZeroAngle() {
         }
         i++;
     }
-    
+    fprintf(logfp, "180 Degrees: Index %n\n", zero_index);
     return zero_index;
 }
 
