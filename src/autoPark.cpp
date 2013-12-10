@@ -197,7 +197,7 @@ void findCorners() {
         i++;
     }
     
-    for (i = findZeroAngle; i > 1; i--) {
+    for (i = findZeroAngle(); i > 1; i--) {
         current = reading_array[i];
         next = reading_array[i-1];
         
