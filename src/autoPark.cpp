@@ -156,7 +156,7 @@ void findCorners() {
     reading next;
     
     next = reading_array[0];
-    while (next != NULL) {
+    while (next.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
         if (next.distance < current.distance && first_corner != NULL) {
