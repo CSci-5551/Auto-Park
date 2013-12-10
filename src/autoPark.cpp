@@ -113,7 +113,7 @@ void scanForSpace() {
     times = 0;
     printf("Scanning...");
     
-    init_dist = sick.getCurrentBuffer().getClosestPolar(-90, 90, ArPose(0, 0), 30000, &init_angle);
+    // init_dist = sick.getCurrentBuffer().getClosestPolar(-90, 90, ArPose(0, 0), 30000, &init_angle);
     
     // Lock the laser
     sick.lockDevice();
@@ -127,7 +127,7 @@ void scanForSpace() {
         
     // Take readings and store angle and distance results in respective arrays
     readings = sick.getCurrentBuffer();
-    for (it = readings->begin(), it != readings->end(); it++) {
+    for (it = readings->begin(); it != readings->end(); it++) {
         i++;
         laser_dist[i] = (*it)->findDistanceTo(ArPose(0, 0));
         laser_angle[i] = (*it)->findAngleTo(ArPose(0, 0));
@@ -152,7 +152,7 @@ void scanForSpace() {
  * parkRobot
  * - Function to park the robot.
  */
-void parkRobot() {
+void parkRobot() { 
     // TODO: Calculate center of circle one
     
     // TODO: Calculate triangle angle
