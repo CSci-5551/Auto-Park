@@ -119,12 +119,12 @@ void scanForSpace() {
     sick.lockDevice();
         
     // Current closest reading within a degree range
-    init_dist = sick.currentReadingPolar(-90, 90, &init_angle);
-    if (init_dist < sick.getMaxRange())
-        fprintf(logfp, "Closest reading %.2f mm away at %.2f degrees\n\n", init_dist, init_angle);
+    laser_dist[0] = sick.currentReadingPolar(-90, 90, &laser_angle[0]);
+    if (laser_dist[0] < sick.getMaxRange())
+        printf("Closest reading %.2f mm away at %.2f degrees\n", laser_dist[0], laser_angle[0]);
     else
-        fprintf(logfp, "No close reading.\n\n");
-        
+        printf("No close reading.\n");
+    
     // Take readings and store angle and distance results in respective arrays
     readings = sick.getCurrentBuffer();
     for (it = readings->begin(); it != readings->end(); it++) {
@@ -152,7 +152,7 @@ void scanForSpace() {
  * parkRobot
  * - Function to park the robot.
  */
-void parkRobot() { 
+void parkRobot() {
     // TODO: Calculate center of circle one
     
     // TODO: Calculate triangle angle
