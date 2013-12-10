@@ -154,12 +154,14 @@ int findZeroAngle() {
     reading current;
     
     i = 0;
+    zero_index = 0;
+    
     current = reading_array[i];
     while (current.distance != NULL) {
         current = reading_array[i];
         
         // May need to change to find first negative, check on first run
-        if (current.angle < -100 && zero_index == NULL) {
+        if (current.angle < -100.00 && zero_index == 0) {
             zero_index = i;
         }
         i++;
