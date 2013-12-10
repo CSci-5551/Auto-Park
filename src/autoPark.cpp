@@ -162,7 +162,7 @@ int findZeroAngle() {
         
         // Return the index of the first negative angle that is less than 100
         if (current.angle < -100.00) {
-            fprintf(logfp, "180 Degrees: Index %n\n", i);
+            fprintf(logfp, "180 Degrees: Index %d\n", i);
             return i;
         }
         i++;
