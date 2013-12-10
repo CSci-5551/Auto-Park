@@ -197,10 +197,7 @@ void findCorners() {
         i++;
     }
     
-    // Find the reading index of the zero angle
-    i = findZeroAngle();
-    
-    for (i > 1; i--) {
+    for (i = findZeroAngle; i > 1; i--) {
         current = reading_array[i];
         next = reading_array[i-1];
         
