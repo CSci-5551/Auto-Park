@@ -13,7 +13,7 @@ using namespace std;
 // Constants
 #define TURNING_RADIUS 1000
 #define ROBOT_RADIUS 227.5
-#define DEPTH_BOUND 1000
+#define DEPTH_BOUND 500 //Adjust depending on expected depth
 #define MAR_ERR 50
 #define VMAX 500
 #define LASER_ANGLE 90
@@ -105,7 +105,6 @@ int initialize(int *argc, char **argv) {
  */
 void takeReadings() {
     int i;
-    double dist, angle;
     std::list<ArPoseWithTime *> *readings;
     std::list<ArPoseWithTime *>::iterator it;
 
@@ -116,21 +115,16 @@ void takeReadings() {
     
     // Lock the laser
     sick.lockDevice();
-        
-    // Current closest reading within a degree range
-    dist = sick.currentReadingPolar(-90, 90, &angle);
-    if (dist < sick.getMaxRange())
-        fprintf(logfp, "Closest reading %.2f mm away at %.2f degrees\n\n", dist, angle);
-    else
-        fprintf(logfp, "No close reading.\n\n");
-    
-    // Take readings and store angle and distance results in reading array
+   
+    // Take readings from 90-180 degrees and store angle and distance results in reading array
     readings = sick.getCurrentBuffer();
     for (it = readings->begin(); it != readings->end(); it++) {
-        reading_array[i].distance = (*it)->findDistanceTo(ArPose(0, 0));
-        reading_array[i].angle = (*it)->findAngleTo(ArPose(0, 0));
-        fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n",
-                i, reading_array[i].distance, reading_array[i].angle);
+	if((*it)->findAngleTo(ArPose(0, 0)) > 89.9) {
+		reading_array[i].distance = (*it)->findDistanceTo(ArPose(0, 0));
+		reading_array[i].angle = (*it)->findAngleTo(ArPose(0, 0));
+		fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n",
+		        i, reading_array[i].distance, reading_array[i].angle);
+	}
         i++;
     }
     
@@ -148,6 +142,7 @@ void takeReadings() {
  * findZeroAngle
  * - Function to park the robot.
  */
+/*
 int findZeroAngle() {
     int i;
     int zero_index;
@@ -168,7 +163,7 @@ int findZeroAngle() {
         i++;
     }
 }
-
+*/
 
 /*
  * findCorners
@@ -176,29 +171,48 @@ int findZeroAngle() {
  */
 void findCorners() {
     int i = 0;
-    double average;
-    double diff;
     reading current;
     reading next;
-    
-    average = 0;
+    bool behind_car = 0; //TODO add logic to find corners assuming starting behind first car
+
     next = reading_array[0];
     while (next.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
-        
-        // Find the first corner
-        diff = next.distance - current.distance;
-        average = (average + diff) / (i+1);
-        if (diff > average + MAR_ERR && first_corner.distance == NULL) {
+/*
+        // Find the first corner if behind first car
+        if (current.distance > next.distance && first_corner.distance == NULL) {
             first_corner.distance = current.distance;
             first_corner.angle = current.angle;
             fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
                     first_corner.distance, first_corner.angle);
         }
+*/
+	//1st corner assuming starting right next to car #1
+	if (((current.distance + DEPTH_BOUND) < next.distance) && first_corner.distance == NULL) {
+            first_corner.distance = current.distance;
+            first_corner.angle = current.angle;
+            fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
+                    first_corner.distance, first_corner.angle);
+        }
+	//2nd corner assuming starting right next to car #1
+	if (current.distance > next.distance && first_corner.distance != NULL && second_corner.distance == NULL) {
+            second_corner.distance = current.distance;
+            second_corner.angle = current.angle;
+            fprintf(logfp, "Second Corner: Distance: %f\tAngle: %f\n",
+                    second_corner.distance, second_corner.angle);
+        }
+	//3rd corner assuming starting right next to car #1
+	if (current.distance < next.distance && first_corner.distance != NULL && second_corner.distance != NULL) {
+            third_corner.distance = current.distance;
+            third_corner.angle = current.angle;
+            fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n",
+                    third_corner.distance, third_corner.angle);
+	    break; //Got all the corners no need to check the other values
+        }
         i++;
     }
-    
+  /*  
     for (i = findZeroAngle(); i > 1; i--) {
         current = reading_array[i];
         next = reading_array[i-1];
@@ -221,7 +235,7 @@ void findCorners() {
         }
         
     }
-    
+    */
     return;
 }
 
