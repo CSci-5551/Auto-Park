@@ -173,37 +173,40 @@ void findCorners() {
     int i = 0;
     reading current;
     reading next;
+    reading nextnext;
     bool behind_car = 0; //TODO add logic to find corners assuming starting behind first car
 
-    next = reading_array[0];
-    while (next.distance != NULL) {
+    nextnext = reading_array[0];
+    while (nextnext.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
-/*
-        // Find the first corner if behind first car
-        if (current.distance > next.distance && first_corner.distance == NULL) {
-            first_corner.distance = current.distance;
-            first_corner.angle = current.angle;
-            fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
-                    first_corner.distance, first_corner.angle);
-        }
+	nextnext = reading_array[i+2]; //instead of worrying about averages check against 2 readings instead of 1
+	/*TODO
+	Potential problem, if nextnext or next has bad data it won't find the first corner 
+	and as such wont find the rest of the corners 
+	solutions:	1. add nextnextnext and expect at least 2/3 to follow trend
+			2. try to ensure next and nextnext work, but if only one works and no other valid corner is 					found assume that if one worked it is our corner
 */
+
 	//1st corner assuming starting right next to car #1
-	if (((current.distance + DEPTH_BOUND) < next.distance) && first_corner.distance == NULL) {
+	if (((current.distance + DEPTH_BOUND) < next.distance) &&
+		((current.distance + DEPTH_BOUND) < nextnext.distance) && first_corner.distance == NULL) {
             first_corner.distance = current.distance;
             first_corner.angle = current.angle;
             fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
                     first_corner.distance, first_corner.angle);
         }
 	//2nd corner assuming starting right next to car #1
-	if (current.distance > next.distance && first_corner.distance != NULL && second_corner.distance == NULL) {
+	if (current.distance > next.distance && current.distance > nextnext.distance
+		&& first_corner.distance != NULL && second_corner.distance == NULL) {
             second_corner.distance = current.distance;
             second_corner.angle = current.angle;
             fprintf(logfp, "Second Corner: Distance: %f\tAngle: %f\n",
                     second_corner.distance, second_corner.angle);
         }
 	//3rd corner assuming starting right next to car #1
-	if (current.distance < next.distance && first_corner.distance != NULL && second_corner.distance != NULL) {
+	if (current.distance < next.distance && current.distance < nextnext.distance
+		&& first_corner.distance != NULL && second_corner.distance != NULL) {
             third_corner.distance = current.distance;
             third_corner.angle = current.angle;
             fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n",
@@ -212,6 +215,19 @@ void findCorners() {
         }
         i++;
     }
+
+	/*
+        // Find the first corner if behind first car
+        if (current.distance > next.distance && first_corner.distance == NULL) {
+            first_corner.distance = current.distance;
+            first_corner.angle = current.angle;
+            fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
+                    first_corner.distance, first_corner.angle);
+        }
+*/
+
+
+
   /*  
     for (i = findZeroAngle(); i > 1; i--) {
         current = reading_array[i];
