@@ -18,6 +18,7 @@ using namespace std;
 #define VMAX 500
 #define LASER_ANGLE 90
 #define OMEGA_MAX 2.618
+#define PI 3.14159265
 #define TRUE 1
 #define FALSE 0
 
@@ -33,8 +34,7 @@ reading reading_array[400];
 reading first_corner;
 reading second_corner;
 reading third_corner;
-reading fourth_corner;
-reading fifth_corner;
+double found_depth, found_width;
 FILE *logfp;
 
 /*
@@ -139,33 +139,6 @@ void takeReadings() {
 
 
 /*
- * findZeroAngle
- * - Function to park the robot.
- */
-/*
-int findZeroAngle() {
-    int i;
-    int zero_index;
-    reading current;
-    
-    i = 0;
-    zero_index = 0;
-    
-    current = reading_array[i];
-    while (current.distance != NULL) {
-        current = reading_array[i];
-        
-        // Return the index of the first negative angle that is less than 100
-        if (current.angle < -100.00) {
-            fprintf(logfp, "180 Degrees: Index %d\n", i);
-            return i;
-        }
-        i++;
-    }
-}
-*/
-
-/*
  * findCorners
  * - A function to find the corners of a parking space
  */
@@ -180,15 +153,12 @@ void findCorners() {
     while (nextnext.distance != NULL) {
         current = reading_array[i];
         next = reading_array[i+1];
-	nextnext = reading_array[i+2]; //instead of worrying about averages check against 2 readings instead of 1
-	/*TODO
-	Potential problem, if nextnext or next has bad data it won't find the first corner 
-	and as such wont find the rest of the corners 
-	solutions:	1. add nextnextnext and expect at least 2/3 to follow trend
-			2. try to ensure next and nextnext work, but if only one works and no other valid corner is 					found assume that if one worked it is our corner
-*/
+	nextnext = reading_array[i+2]; //check against 2 readings instead of 1
 
-	//1st corner assuming starting right next to car #1
+	//This function occasionally fails and doesn't give the corners. 
+	//When it fails the data looks fine... so I'm not sure what's going on.
+
+	//1st corner assuming starting right next to car #1 && we ccan see the botton corner of car2
 	if (((current.distance + DEPTH_BOUND) < next.distance) &&
 		((current.distance + DEPTH_BOUND) < nextnext.distance) && first_corner.distance == NULL) {
             first_corner.distance = current.distance;
@@ -216,6 +186,9 @@ void findCorners() {
         i++;
     }
 
+	
+
+
 	/*
         // Find the first corner if behind first car
         if (current.distance > next.distance && first_corner.distance == NULL) {
@@ -224,37 +197,30 @@ void findCorners() {
             fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
                     first_corner.distance, first_corner.angle);
         }
-*/
+	*/
+	return;
 
-
-
-  /*  
-    for (i = findZeroAngle(); i > 1; i--) {
-        current = reading_array[i];
-        next = reading_array[i-1];
-        
-        // Find the third corner
-        if (next.distance < current.distance && third_corner.distance == NULL) {
-            third_corner.distance = current.distance;
-            third_corner.angle = current.angle;
-            fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n",
-                    third_corner.distance, third_corner.angle);
-            
-        }
-        
-        // Find the second corner
-        if (next.distance > current.distance && third_corner.distance != NULL) {
-            second_corner.distance = current.distance;
-            second_corner.angle = current.angle;
-            fprintf(logfp, "Second Corner: Distance: %f\tAngle: %f\n",
-                    second_corner.distance, second_corner.angle);
-        }
-        
-    }
-    */
-    return;
 }
 
+/*
+ * getDimensions
+ * - Function to get Depth and Width using law of Cosines
+ */
+void getDimensions() {
+	
+	found_depth = sqrt(pow(second_corner.distance,2.0) + pow(third_corner.distance,2.0) 
+			- 2.0 * second_corner.distance * third_corner.distance 
+			* cos((third_corner.angle - second_corner.angle) * PI / 180));
+
+	fprintf(logfp, "Depth: %f\n", found_depth);
+
+	found_width = sqrt(pow(first_corner.distance,2.0) + pow(third_corner.distance,2.0) 
+			- 2.0 * first_corner.distance * third_corner.distance 
+			* cos((third_corner.angle - first_corner.angle) * PI / 180));
+	fprintf(logfp, "Width: %f\n", found_width);
+    
+    return;
+}
 
 /*
  * parkRobot
@@ -307,6 +273,9 @@ int main(int argc, char **argv) {
     // Calcuate corner angles and distances
     fprintf(logfp, "## CORNERS ##\n");
     findCorners();
+
+    // Use corners to get dimension of parking spot
+    getDimensions();
   
     // When parking space is found, execute park function
     parkRobot();
