@@ -11,10 +11,13 @@
 using namespace std;
 
 // Constants
+#define MAX_MOVES 5	//Maximum times to move MOVE_DISTANCE and check for new spot
+#define MAX_SCANS 3 //Maximum times to scan for corners at each "initial" location
+#define MOVE_DISTANCE 300.0  //Distance to move before attempting to find corners again
 #define TURNING_RADIUS 525.0
 #define ROBOT_RADIUS 227.5
 #define ROBOT_BACK 425.0
-#define DEPTH_BOUND 150.0 //Adjust depending on expected depth
+#define DEPTH_BOUND 175.0 //Adjust depending on expected depth
 #define WHEEL_BASE 380.0
 #define MAR_ERR 50.0
 #define VMAX 300.0
@@ -101,6 +104,7 @@ int initialize(int *argc, char **argv) {
         return 1;
     }
     printf("Laser: Connected\n");
+	robot.enableMotors();
 
     return 0;
 }
@@ -111,60 +115,65 @@ int initialize(int *argc, char **argv) {
 * - A function to search for an open space using the SICK laser.
 */
 void takeReadings() {
-    int i;
-    std::list<ArPoseWithTime *> *readings;
-    std::list<ArPoseWithTime *>::iterator it;
+	int i;
+	std::list<ArPoseWithTime *> *readings;
+	std::list<ArPoseWithTime *>::iterator it;
 
-    // Initialize vars
-    i = 0;
-    printf("Scanning...");
-    ArUtil::sleep(500);
+	// Initialize vars
+	i = 0;
+	printf("Scanning...");
+	ArUtil::sleep(500);
 
-    //Initialize readings to 0
-    first_corner.distance = 0;
-    second_corner.distance = 0;
-    third_corner.distance = 0;
-    for(int i = 0; i<400; i++) {
-        reading_array[i].distance = 0;
-    }
-    
-    // Lock the laser
-    sick.lockDevice();
-   
-    // Take readings from 90-180 degrees and store angle and distance results in reading array
-    readings = sick.getCurrentBuffer();
-    int numReadings = 0;
-    for (it = readings->begin(); it != readings->end(); it++) {
-        if((*it)->findAngleTo(ArPose(0, 0)) > 89.9) {
-                reading_array[i].distance = (*it)->findDistanceTo(ArPose(0, 0));
-                reading_array[i].angle = (*it)->findAngleTo(ArPose(0, 0));
-                fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n",
-                numReadings, reading_array[i].distance, reading_array[i].angle);
-                numReadings++;
-        }
-        i++;
-    }
+	//Initialize readings to 0
+	first_corner.distance = 0;
+	second_corner.distance = 0;
+	third_corner.distance = 0;
+	for(int i = 0; i<400; i++) {
+		reading_array[i].distance = 0;
+	}
 
-    //reverse if first value == 180 instead of 90
-    if(reading_array[0].angle > 100.0) {
-        for(int j = 0; j < numReadings; j++) {
-            double tempAngle = reading_array[numReadings-j].angle; 
-            double tempDist = reading_array[numReadings-j].distance;
-            reading_array[numReadings-j].angle = reading_array[j].angle;
-            reading_array[numReadings-j].distance = reading_array[j].distance;
-            reading_array[j].angle = tempAngle;
-            reading_array[j].distance = tempDist;
-        }
-    }
-            
-    
-    // Unlock laser and return
-    sick.unlockDevice();
-    ArUtil::sleep(100);
-    puts("");
-    fprintf(logfp, "\n");
-    printf("done\n");
-    return;
+	// Lock the laser
+	sick.lockDevice();
+
+	// Take readings from 90-180 degrees and store angle and distance results in reading array
+	readings = sick.getCurrentBuffer();
+	int numReadings = 0;
+	for (it = readings->begin(); it != readings->end(); it++) {
+		if((*it)->findAngleTo(ArPose(0, 0)) > 89.9) {
+			reading_array[i].distance = (*it)->findDistanceTo(ArPose(0, 0));
+			reading_array[i].angle = (*it)->findAngleTo(ArPose(0, 0));
+			numReadings++;
+		}
+		i++;
+	}
+
+	//reverse array if first value is 180 instead of 90
+	if(reading_array[0].angle > 100.0) {
+		for(int j = 0; j <= numReadings; j++) {
+			double tempAngle = reading_array[numReadings-j].angle; 
+			double tempDist = reading_array[numReadings-j].distance;
+			reading_array[numReadings-j].angle = reading_array[j].angle;
+			reading_array[numReadings-j].distance = reading_array[j].distance;
+			reading_array[j].angle = tempAngle;
+			reading_array[j].distance = tempDist;
+		}
+	}
+
+		   
+	//print readings to log file
+	for(int k = 0; k < numReadings; k++) {
+	fprintf(logfp, "Reading %d:\tLaser Dist: %f\tAngle: %f\n",
+		        k, reading_array[k].distance, reading_array[k].angle);
+	}
+
+
+	// Unlock laser and return
+	sick.unlockDevice();
+	ArUtil::sleep(100);
+	puts("");
+	fprintf(logfp, "\n");
+	printf("done\n");
+	return;
 }
 
 
@@ -210,7 +219,7 @@ void findCorners() {
                 && first_corner.distance != 0 && second_corner.distance != 0) {
             third_corner.distance = current.distance;
             third_corner.angle = current.angle;
-            fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n",
+            fprintf(logfp, "Third Corner: Distance: %f\tAngle: %f\n\n",
                     third_corner.distance, third_corner.angle);
          break; //Got all the corners no need to check the other values
         }
@@ -236,17 +245,17 @@ first_corner.distance, first_corner.angle);
 * - Function to get Depth and Width using Cosines
 */
 void getDimensions() {
-        
-        found_depth = sqrt(pow(second_corner.distance,2.0) + pow(third_corner.distance,2.0)
-                        - 2.0 * second_corner.distance * third_corner.distance
-                        * cos((third_corner.angle - second_corner.angle) * PI / 180));
+    
+    found_depth = sqrt(pow(second_corner.distance,2.0) + pow(third_corner.distance,2.0)
+                    - 2.0 * second_corner.distance * third_corner.distance
+                    * cos((third_corner.angle - second_corner.angle) * PI / 180));
 
-        fprintf(logfp, "Depth: %f\n", found_depth);
+    fprintf(logfp, "Depth: %f\n", found_depth);
 
-        found_width = sqrt(pow(first_corner.distance,2.0) + pow(third_corner.distance,2.0)
-                        - 2.0 * first_corner.distance * third_corner.distance
-                        * cos((third_corner.angle - first_corner.angle) * PI / 180));
-        fprintf(logfp, "Width: %f\n", found_width);
+    found_width = sqrt(pow(first_corner.distance,2.0) + pow(third_corner.distance,2.0)
+                    - 2.0 * first_corner.distance * third_corner.distance
+                    * cos((third_corner.angle - first_corner.angle) * PI / 180));
+    fprintf(logfp, "Width: %f\n", found_width);
     
     return;
 }
@@ -276,7 +285,7 @@ void parkRobot() {
     double xtangent = circle1_x + sqrt(pow(TURNING_RADIUS,2.0) - pow((circle2_y - circle1_y/2),2.0));
     fprintf(logfp, "xtangent %f\n", xtangent);
 
-    double circle2_x = 2* xtangent - circle1_x;
+    double circle2_x = (2.0 * xtangent) - circle1_x;
     fprintf(logfp, "circle2_x %f\n", circle2_x);
 
     double wheel_ratio = ((TURNING_RADIUS/WHEEL_BASE) + 1.0)/((TURNING_RADIUS/WHEEL_BASE) - 1.0);
@@ -288,7 +297,6 @@ void parkRobot() {
     //move to starting location for parking
     cout << "Moving forward " << circle2_x << " mm." << endl;
     robot.lock();
-    robot.enableMotors();
     robot.move(circle2_x);
     robot.unlock();
     ArUtil::sleep(2000);
@@ -358,18 +366,39 @@ int main(int argc, char **argv) {
     fprintf(logfp, "## CORNERS ##\n");
     findCorners();
 
-    int max_tries = 5;
-    if(third_corner.distance == 0 && max_tries > 0) { //Didn't find corners? try a few more times.
-	takeReadings();
-	findCorners();
-	max_tries--;
-    }
+    int max_tries; //Didn't find corners? try a few more times.
+	int max_move = MAX_MOVES;  
+	bool found_spot = false;
+	while(!found_spot && max_move > 0) {
+		max_tries = MAX_SCANS;
+		while((third_corner.distance == 0 || first_corner.angle > 150.0 )&& max_tries > 0) { 
+			takeReadings();
+			findCorners();
+			if(third_corner.distance != 0 && first_corner.angle < 150.0)
+				found_spot = true;
+			max_tries--;
+		}
+		robot.lock();
+		robot.move(MOVE_DISTANCE);
+		robot.unlock();
+		ArUtil::sleep(2000);
+		while(robot.isMoveDone() == false) {}
+		robot.lock();
+		robot.moveTo(ArPose(0,0,0), true); //resets pose to 0,0 for new position
+		robot.unlock();
+		ArUtil::sleep(200);
+		max_move--;
+	}
+		
 
     // Use corners to get dimension of parking spot
     getDimensions();
-  
+	
     // When parking space is found, execute park function
-    parkRobot();
+	if((found_width > (ROBOT_RADIUS *2 + 150)) && found_spot)
+    	parkRobot();
+	else
+		cout << "Adequate spot not found." << endl;
     
     // Shutdown the robot
     //robot.waitForRunExit();
