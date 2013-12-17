@@ -40,6 +40,7 @@ reading reading_array[400];
 reading first_corner;
 reading second_corner;
 reading third_corner;
+reading ahead_corner;
 double found_depth, found_width;
 FILE *logfp;
 
@@ -117,7 +118,6 @@ int initialize(int *argc, char **argv) {
  * - A function to search for an open space using the SICK laser.
  */
 void takeReadings() {
-    <<<<<<< HEAD
     int i;
     std::list<ArPoseWithTime *> *readings;
     std::list<ArPoseWithTime *>::iterator it;
@@ -131,6 +131,7 @@ void takeReadings() {
     first_corner.distance = 0;
     second_corner.distance = 0;
     third_corner.distance = 0;
+    ahead_corner.distance = 0;
     for(int i = 0; i<400; i++) {
         reading_array[i].distance = 0;
     }
@@ -367,7 +368,7 @@ void parkRobot() {
     // Calculate distance to move forward
     double ahead_car_x = sin(ahead_corner.angle * PI /180.0) * ahead_corner.distance;
     fprintf(logfp, "ahead_car_x: %f\n", ahead_car_x);
-    double distance_forward = ahead_car_x - (Width / 2) + (MAR_ERR / 2) ;
+    double distance_forward = ahead_car_x - (found_width / 2) + (MAR_ERR / 2) ;
     
     // Move robot forward
     robot.lock();
