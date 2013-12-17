@@ -18,7 +18,7 @@ using namespace std;
 #define TURNING_RADIUS 525.0
 #define ROBOT_RADIUS 227.5
 #define ROBOT_BACK 425.0
-#define DEPTH_BOUND 175.0 //Adjust depending on expected depth
+#define DEPTH_BOUND 120.0 //Adjust depending on expected depth
 #define WHEEL_BASE 320.0
 #define MAR_ERR 50.0
 #define VMAX 300.0
@@ -117,7 +117,6 @@ int initialize(int *argc, char **argv) {
 * - A function to search for an open space using the SICK laser.
 */
 void takeReadings() {
-<<<<<<< HEAD
         int i;
         std::list<ArPoseWithTime *> *readings;
         std::list<ArPoseWithTime *>::iterator it;
