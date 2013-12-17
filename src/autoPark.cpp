@@ -240,35 +240,6 @@ void findCorners() {
 }
 
 /*
- * findAheadCorner
- * - A function to find the corners of the car ahead of the robot.
- */
-void findAheadCorner() {
-    int i = 0;
-    reading current;
-    reading next;
-    reading nextnext;
-    
-    nextnext = reading_array[0];
-    
-    // Scan for rightmost corner
-    while (nextnext.distance != 0) {
-        current = reading_array[i];
-        next = reading_array[i+1];
-        nextnext = reading_array[i+2];
-        
-        if (current.distance > next.distance && current.distance > nextnext.distance
-            && ahead_corner.distance == 0) {
-            ahead_corner.distance = current.distance;
-            ahead_corner.angle = current.angle;
-            fprintf(logfp, "Ahead Corner: Distance: %f\tAngle: %f\n",
-                    ahead_corner.distance, ahead_corner.angle);
-        }
-    }
-    return;
-}
-
-/*
 * getDimensions
 * - Function to get Depth and Width using Cosines
 */
