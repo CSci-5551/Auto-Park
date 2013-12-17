@@ -11,24 +11,18 @@
 using namespace std;
 
 // Constants
-<<<<<<< HEAD
 #define MAX_MOVES 5        //Maximum times to move MOVE_DISTANCE and check for new spot
 #define MAX_SCANS 3 //Maximum times to scan for corners at each "initial" location
 #define MOVE_DISTANCE 300.0 //Distance to move before attempting to find corners again
-=======
 #define MAX_MOVES 5	//Maximum times to move MOVE_DISTANCE and check for new spot
 #define MAX_SCANS 3 //Maximum times to scan for corners at each "initial" location
 #define MOVE_DISTANCE 300.0  //Distance to move before attempting to find corners again
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
 #define TURNING_RADIUS 525.0
 #define ROBOT_RADIUS 227.5
 #define ROBOT_BACK 425.0
 #define DEPTH_BOUND 175.0 //Adjust depending on expected depth
-<<<<<<< HEAD
 #define WHEEL_BASE 320.0
-=======
 #define WHEEL_BASE 380.0
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
 #define MAR_ERR 50.0
 #define VMAX 300.0
 #define LASER_ANGLE 90.0
@@ -114,11 +108,8 @@ int initialize(int *argc, char **argv) {
         return 1;
     }
     printf("Laser: Connected\n");
-<<<<<<< HEAD
-        robot.enableMotors();
-=======
+
 	robot.enableMotors();
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
 
     return 0;
 }
@@ -129,7 +120,7 @@ int initialize(int *argc, char **argv) {
 * - A function to search for an open space using the SICK laser.
 */
 void takeReadings() {
-<<<<<<< HEAD
+
         int i;
         std::list<ArPoseWithTime *> *readings;
         std::list<ArPoseWithTime *>::iterator it;
@@ -189,7 +180,7 @@ void takeReadings() {
         fprintf(logfp, "\n");
         printf("done\n");
         return;
-=======
+
 	int i;
 	std::list<ArPoseWithTime *> *readings;
 	std::list<ArPoseWithTime *>::iterator it;
@@ -249,7 +240,6 @@ void takeReadings() {
 	fprintf(logfp, "\n");
 	printf("done\n");
 	return;
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
 }
 
 
@@ -301,22 +291,18 @@ void findCorners() {
         }
         i++;
     }
-
-
         /*
-// Find the first corner if behind first car
-if (current.distance > next.distance && first_corner.distance == NULL) {
-first_corner.distance = current.distance;
-first_corner.angle = current.angle;
-fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
-first_corner.distance, first_corner.angle);
-}
-<<<<<<< HEAD
-*/
-=======
-        */
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
-        return;
+            Find the first corner if behind first car
+            if (current.distance > next.distance && first_corner.distance == NULL) {
+            first_corner.distance = current.distance;
+            first_corner.angle = current.angle;
+            fprintf(logfp, "First Corner: Distance: %f\tAngle: %f\n",
+            first_corner.distance, first_corner.angle);
+            }
+
+         */
+
+    return;
 
 }
 
@@ -347,7 +333,7 @@ void getDimensions() {
 */
 void parkRobot() {
     // TODO: Combine variables once we know they are individually correct
-<<<<<<< HEAD
+
     double first_car_x = -cos(first_corner.angle * PI /180.0) * first_corner.distance;
     fprintf(logfp, "first_car_x: %f\n", first_car_x);
 
@@ -358,7 +344,7 @@ void parkRobot() {
     fprintf(logfp, "circle1_x: %f\n", circle1_x);
 
     double circle1_y = wall_y + ROBOT_RADIUS + TURNING_RADIUS + 50;  //50 = wiggle room, mm
-=======
+
     double first_car_x = sin(first_corner.angle * PI /180.0) * first_corner.distance;
     fprintf(logfp, "first_car_x: %f\n", first_car_x);
 
@@ -369,23 +355,20 @@ void parkRobot() {
     fprintf(logfp, "circle1_x: %f\n", circle1_x);
 
     double circle1_y = -wall_y + ROBOT_RADIUS + TURNING_RADIUS;
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
     fprintf(logfp, "circle1_y %f\n", circle1_y);
 
     double circle2_y = -TURNING_RADIUS;
     fprintf(logfp, "circle2_y %f\n", circle2_y);
 
-<<<<<<< HEAD
     double xtangent = circle1_x + sqrt(pow(TURNING_RADIUS,2.0) - pow(((circle2_y - circle1_y)/2),2.0));
-=======
+
     double xtangent = circle1_x + sqrt(pow(TURNING_RADIUS,2.0) - pow((circle2_y - circle1_y/2),2.0));
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
+    
     fprintf(logfp, "xtangent %f\n", xtangent);
 
     double circle2_x = (2.0 * xtangent) - circle1_x;
     fprintf(logfp, "circle2_x %f\n", circle2_x);
 
-<<<<<<< HEAD
     double wheel_ratio = ((2.0 * TURNING_RADIUS/WHEEL_BASE) + 1.0)/((2.0 * TURNING_RADIUS/WHEEL_BASE) - 1.0);
     fprintf(logfp, "wheel_ratio %f\n", wheel_ratio);
 
@@ -404,7 +387,6 @@ void parkRobot() {
     robot.move(circle2_x-150);
     robot.unlock();
     ArUtil::sleep(5000);
-=======
     double wheel_ratio = ((TURNING_RADIUS/WHEEL_BASE) + 1.0)/((TURNING_RADIUS/WHEEL_BASE) - 1.0);
     fprintf(logfp, "wheel_ratio %f\n", wheel_ratio);
 
@@ -417,13 +399,11 @@ void parkRobot() {
     robot.move(circle2_x);
     robot.unlock();
     ArUtil::sleep(2000);
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
     while(robot.isMoveDone() == false) {} //don't do anything until the move is done
 
     //This does the general parking motion, although far from perfect
     //the ratio seems a bit off because it needs to turn almost 90 degrees to get deep enough into the spot
     //need to calculate sleep amount or find another way to follow circular path
-<<<<<<< HEAD
     cout << "1st turning velocity: (" << rightVel << "," << (wheel_ratio * rightVel) << ")" << endl;
     robot.lock();
     robot.setVel2((wheel_ratio * rightVel), rightVel);
@@ -435,7 +415,7 @@ void parkRobot() {
     robot.setVel2(rightVel, (wheel_ratio * rightVel));
     robot.unlock();
     ArUtil::sleep(t_turn);
-=======
+
     cout << "1st turning velocity: (" << rightVel << "," << (wheel_ratio * rightVel) << ")" << endl; 
     robot.lock();
     robot.setVel2(rightVel,(wheel_ratio * rightVel)); 
@@ -447,7 +427,6 @@ void parkRobot() {
     robot.setVel2((wheel_ratio * rightVel), rightVel);
     robot.unlock();
     ArUtil::sleep(3000);
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
     robot.lock();
     robot.stop();
     robot.unlock();
@@ -499,7 +478,6 @@ int main(int argc, char **argv) {
     findCorners();
 
     int max_tries; //Didn't find corners? try a few more times.
-<<<<<<< HEAD
         int max_move = MAX_MOVES;
         bool found_spot = false;
         while(!found_spot && max_move > 0) {
@@ -533,7 +511,6 @@ int main(int argc, char **argv) {
         else
                 cout << "Adequate spot not found." << endl;
                 cout << found_spot << endl;
-=======
 	int max_move = MAX_MOVES;  
 	bool found_spot = false;
 	while(!found_spot && max_move > 0) {
@@ -566,7 +543,6 @@ int main(int argc, char **argv) {
     	parkRobot();
 	else
 		cout << "Adequate spot not found." << endl;
->>>>>>> 4d19c89afb99c7448644e79a7071f2f0d70e8dba
     
     // Shutdown the robot
     //robot.waitForRunExit();
