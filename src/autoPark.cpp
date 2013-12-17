@@ -18,7 +18,7 @@ using namespace std;
 #define TURNING_RADIUS 525.0
 #define ROBOT_RADIUS 227.5
 #define ROBOT_BACK 425.0
-#define DEPTH_BOUND 120.0 //Adjust depending on expected depth
+#define DEPTH_BOUND 100.0 //Adjust depending on expected depth
 #define WHEEL_BASE 320.0
 #define MAR_ERR 50.0
 #define VMAX 300.0
