@@ -43,6 +43,7 @@ reading reading_array[400];
 reading first_corner;
 reading second_corner;
 reading third_corner;
+reading ahead_corner;
 double found_depth, found_width;
 FILE *logfp;
 
@@ -303,7 +304,36 @@ void findCorners() {
          */
 
     return;
+}
 
+
+/*
+ * findAheadCorner
+ * - A function to find the corners of the car ahead of the robot.
+ */
+void findAheadCorner() {
+    int i = 0;
+    reading current;
+    reading next;
+    reading nextnext;
+    
+    nextnext = reading_array[0];
+    
+    // Scan for rightmost corner
+    while (nextnext.distance != 0) {
+        current = reading_array[i];
+        next = reading_array[i+1];
+        nextnext = reading_array[i+2];
+        
+        if (current.distance > next.distance && current.distance > nextnext.distance
+            && ahead_corner.distance == 0) {
+            ahead_corner.distance = current.distance;
+            ahead_corner.angle = current.angle;
+            fprintf(logfp, "Ahead Corner: Distance: %f\tAngle: %f\n",
+                    ahead_corner.distance, ahead_corner.angle);
+        }
+    }
+    return;
 }
 
 /*
@@ -431,7 +461,24 @@ void parkRobot() {
     robot.stop();
     robot.unlock();
 
-
+    // Take new readings
+    takeReadings();
+    
+    // Find the corner of the car ahead
+    findAheadCorner();
+    
+    // Calculate distance to move forward
+    double ahead_car_x = sin(ahead_corner.angle * PI /180.0) * ahead_corner.distance;
+    fprintf(logfp, "ahead_car_x: %f\n", ahead_car_x);
+    double distance_forward = ahead_car_x - (Width / 2) + (MAR_ERR / 2) ;
+    
+    // Move robot forward
+    robot.lock();
+    robot.move(distance_forward);
+    robot.unlock();
+    ArUtil::sleep(2000);
+    while(robot.isMoveDone() == false) {}
+    
     return;
 }
 
