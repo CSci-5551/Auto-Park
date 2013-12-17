@@ -302,7 +302,7 @@ void parkRobot() {
     wheel_ratio = ((2.0*TURNING_RADIUS/WHEEL_BASE)+1.0)/((2.0*TURNING_RADIUS/WHEEL_BASE)-1.0);
     right_vel = -(VMAX * 2.0) / (1 + wheel_ratio);
     turn_angle = atan2(circle1_y - circle2_y, circle2_x - circle1_x);
-    turn_time = 1000 * abs(((PI/2)-A)/((rightVel - wheel_ratio * right_vel)/WHEEL_BASE));
+    turn_time = 1000 * abs(((PI/2)-turn_angle)/((right_vel - wheel_ratio * right_vel)/WHEEL_BASE));
     
     // Print calculations to logfile
     fprintf(logfp, "## CALCULATIONS ##\n");
