@@ -284,11 +284,11 @@ void getDimensions() {
  */
 void parkRobot() {
     double first_car_x, ahead_car_x;
-    double circle1_x, circle1_y,
+    double circle1_x, circle1_y;
     double circle2_x, circle2_y;
     double xtangent, wall_y, wheel_ratio;
+    double turn_angle, turn_time;
     double right_vel;
-    double turn_angle;
     double distance_forward;
     
     // Calculate values
@@ -365,7 +365,7 @@ void parkRobot() {
     // Move forward if still far away from ahead car
     if (ahead_car_x > (ROBOT_RADIUS + 200)) {
         printf("Moving forward");
-        fprintf(logfp, "Forward move correction: %f\n", distance_forward);
+        fprintf(logfp, "Forward move correction: %f\n", ROBOT_RADIUS);
         robot.lock();
         robot.setVel2(100,100);
         robot.move(ROBOT_RADIUS);
