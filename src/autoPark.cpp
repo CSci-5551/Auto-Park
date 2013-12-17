@@ -18,7 +18,7 @@ using namespace std;
 #define TURNING_RADIUS 525.0
 #define ROBOT_RADIUS 227.5
 #define ROBOT_BACK 425.0
-#define DEPTH_BOUND 175.0 //Adjust depending on expected depth
+#define DEPTH_BOUND 100.0 //Adjust depending on expected depth
 #define WHEEL_BASE 320.0
 #define MAR_ERR 50.0
 #define VMAX 300.0
@@ -307,7 +307,7 @@ void parkRobot() {
     double circle1_x = first_car_x + ROBOT_BACK;
     fprintf(logfp, "circle1_x: %f\n", circle1_x);
     
-    double circle1_y = wall_y + ROBOT_RADIUS + TURNING_RADIUS + 50;  //50 = wiggle room, mm
+    double circle1_y = wall_y + ROBOT_RADIUS + TURNING_RADIUS + 30.0;  //50 = wiggle room, mm
     fprintf(logfp, "circle1_y %f\n", circle1_y);
     
     double circle2_y = -TURNING_RADIUS;
@@ -359,7 +359,7 @@ void parkRobot() {
     robot.stop();
     robot.unlock();
     
-	// Take new readings
+    // Take new readings
     takeReadings();
     
     // Find the corner of the car ahead
